@@ -12,6 +12,7 @@ export default function SideNavBar() {
     { href: '/', icon: 'home', label: 'Accueil' },
     { href: '/standings', icon: 'leaderboard', label: 'Classement' },
     { href: '/mercato', icon: 'payments', label: 'Mercato' },
+    { href: '/my-club', icon: 'shield', label: 'Mon Club' },
     { href: '/tactics', icon: 'strategy', label: 'Tactiques' },
     { href: '/profile', icon: 'person', label: 'Profil' },
     ...(profile?.role === 'admin' ? [{ href: '/admin', icon: 'dashboard', label: 'Admin' }] : []),
