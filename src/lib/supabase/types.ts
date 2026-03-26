@@ -26,6 +26,16 @@ export interface Profile {
   level: number;
   rank_title: string;
   is_banned: boolean;
+  
+  // Phase 1 : Identité Virtuelle (Virtual Pro)
+  onboarding_completed: boolean;
+  position: string | null;
+  secondary_position: string | null;
+  height: number | null; // cm
+  weight: number | null; // kg
+  strong_foot: string | null;
+  bio: string | null;
+  
   created_at: string;
   updated_at: string;
 }

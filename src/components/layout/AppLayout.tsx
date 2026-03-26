@@ -1,15 +1,26 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
+import { useEffect } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/context/AuthContext';
 import SideNavBar from './SideNavBar';
 import TopNavBar from './TopNavBar';
 import MobileNavBar from './MobileNavBar';
 
-const authRoutes = ['/login', '/signup'];
+const authRoutes = ['/login', '/signup', '/onboarding'];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, isLoading } = useAuth();
   const isAuthRoute = authRoutes.includes(pathname);
+
+  // Enforce Onboarding
+  useEffect(() => {
+    if (!isLoading && user && profile && !profile.onboarding_completed && pathname !== '/onboarding') {
+      router.push('/onboarding');
+    }
+  }, [isLoading, user, profile, pathname, router]);
 
   if (isAuthRoute) {
     return <>{children}</>;
