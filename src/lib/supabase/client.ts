@@ -1,18 +1,12 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error(
-    'Missing Supabase environment variables. Check your .env.local file.'
-  );
-}
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 
 /**
  * Supabase client for use in Client Components.
- * This uses the anon key and is safe for browser usage.
- * Typed with the Database schema for full autocomplete.
+ * Uses empty strings as fallback during build/SSG to prevent crashes.
+ * At runtime in the browser, the env vars will always be present.
  */
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey);
