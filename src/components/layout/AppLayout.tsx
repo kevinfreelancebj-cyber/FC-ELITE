@@ -1,8 +1,20 @@
+'use client';
+
+import { usePathname } from 'next/navigation';
 import SideNavBar from './SideNavBar';
 import TopNavBar from './TopNavBar';
 import MobileNavBar from './MobileNavBar';
 
+const authRoutes = ['/login', '/signup'];
+
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isAuthRoute = authRoutes.includes(pathname);
+
+  if (isAuthRoute) {
+    return <>{children}</>;
+  }
+
   return (
     <>
       <TopNavBar />

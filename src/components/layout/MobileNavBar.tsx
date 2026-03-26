@@ -7,11 +7,11 @@ export default function MobileNavBar() {
   const pathname = usePathname();
 
   const links = [
-    { href: '/', icon: 'home', label: 'Home' },
-    { href: '/standings', icon: 'leaderboard', label: 'Stats' },
+    { href: '/', icon: 'home', label: 'Accueil' },
+    { href: '/standings', icon: 'leaderboard', label: 'Classement' },
     { href: '/mercato', icon: 'payments', label: 'Mercato', special: true },
-    { href: '/tactics', icon: 'strategy', label: 'Tactics' },
-    { href: '/profile', icon: 'person', label: 'Profile' },
+    { href: '/tactics', icon: 'strategy', label: 'Tactiques' },
+    { href: '/profile', icon: 'person', label: 'Profil' },
   ];
 
   return (
