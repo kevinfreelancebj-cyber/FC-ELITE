@@ -8,7 +8,7 @@ export default function MobileNavBar() {
 
   const links = [
     { href: '/', icon: 'home', label: 'Accueil' },
-    { href: '/standings', icon: 'leaderboard', label: 'Classement' },
+    { href: '/fixtures', icon: 'sports_score', label: 'Matchs' },
     { href: '/my-club', icon: 'shield', label: 'Mon Club', special: true },
     { href: '/mercato', icon: 'payments', label: 'Mercato' },
     { href: '/profile', icon: 'person', label: 'Profil' },
