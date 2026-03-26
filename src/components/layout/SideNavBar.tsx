@@ -9,7 +9,7 @@ export default function SideNavBar() {
   const { profile, signOut } = useAuth();
 
   const links = [
-    { href: '/', icon: 'home', label: 'Accueil' },
+    { href: '/dashboard', icon: 'dashboard', label: 'Tableau' },
     { href: '/standings', icon: 'leaderboard', label: 'Classement' },
     { href: '/fixtures', icon: 'sports_score', label: 'Matchs' },
     { href: '/mercato', icon: 'payments', label: 'Mercato' },

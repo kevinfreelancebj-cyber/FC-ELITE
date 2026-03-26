@@ -7,7 +7,7 @@ export default function MobileNavBar() {
   const pathname = usePathname();
 
   const links = [
-    { href: '/', icon: 'home', label: 'Accueil' },
+    { href: '/dashboard', icon: 'dashboard', label: 'Tableau' },
     { href: '/fixtures', icon: 'sports_score', label: 'Matchs' },
     { href: '/my-club', icon: 'shield', label: 'Mon Club', special: true },
     { href: '/mercato', icon: 'payments', label: 'Mercato' },

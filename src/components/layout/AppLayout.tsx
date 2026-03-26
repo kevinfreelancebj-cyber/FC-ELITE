@@ -7,13 +7,13 @@ import SideNavBar from './SideNavBar';
 import TopNavBar from './TopNavBar';
 import MobileNavBar from './MobileNavBar';
 
-const authRoutes = ['/login', '/signup', '/onboarding'];
+const noLayoutRoutes = ['/login', '/signup', '/onboarding', '/'];
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const { user, profile, isLoading } = useAuth();
-  const isAuthRoute = authRoutes.includes(pathname);
+  const isNoLayoutRoute = noLayoutRoutes.includes(pathname);
 
   // Enforce Onboarding
   useEffect(() => {
@@ -22,7 +22,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
   }, [isLoading, user, profile, pathname, router]);
 
-  if (isAuthRoute) {
+  if (isNoLayoutRoute) {
     return <>{children}</>;
   }
 
