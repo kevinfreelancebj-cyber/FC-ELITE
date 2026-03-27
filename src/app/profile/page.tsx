@@ -1,170 +1,206 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
+import { supabase } from '@/lib/supabase/client';
+import { useAuth } from '@/context/AuthContext';
+import { PageSkeleton } from '@/components/ui/LoadingSkeleton';
+import type { Team } from '@/lib/supabase/types';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
+type MembershipInfo = {
+  team_id: string;
+  role: string;
+  jersey_number: number | null;
+  teams: Team;
+};
+
 export default function PlayerProfile() {
+  const router = useRouter();
+  const { user, profile, isLoading } = useAuth();
+  const [membership, setMembership] = useState<MembershipInfo | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!isLoading && !user) { router.push('/login'); return; }
+    if (!isLoading && user) {
+      (async () => {
+        const { data } = await supabase
+          .from('team_members')
+          .select('team_id, role, jersey_number, teams(*)')
+          .eq('profile_id', user.id)
+          .eq('is_active', true)
+          .single();
+        if (data) setMembership(data as unknown as MembershipInfo);
+        setLoading(false);
+      })();
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, user]);
+
+  if (isLoading || loading) return <PageSkeleton />;
+  if (!profile) return null;
+
+  const positionLabels: Record<string, string> = {
+    GB: 'Gardien de But', DC: 'Défenseur Central', DD: 'Arrière Droit', DG: 'Arrière Gauche',
+    MDC: 'Milieu Défensif', MC: 'Milieu Central', MOC: 'Milieu Offensif',
+    AD: 'Ailier Droit', AG: 'Ailier Gauche', BU: 'Buteur',
+  };
+
   return (
     <motion.div initial="hidden" animate="show" variants={{ show: { transition: { staggerChildren: 0.1 } } }}>
-      <motion.header variants={fadeUp} className="mb-8 rounded-2xl overflow-hidden relative min-h-[450px]">
-        <img alt="Photo d'action" className="absolute inset-0 w-full h-full object-cover object-top opacity-40 mix-blend-luminosity" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=2000" />
-        <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-        <div className="absolute inset-0 bg-gradient-to-r from-background via-transparent to-transparent" />
-        
+      {/* HERO HEADER */}
+      <motion.header variants={fadeUp} className="mb-10 rounded-2xl overflow-hidden relative min-h-[350px] bg-surface-container-low border border-white/5">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-transparent to-tertiary/10" />
+        <div className="absolute inset-0 bg-gradient-to-t from-surface-container-low via-surface-container-low/60 to-transparent" />
+
         <div className="relative z-10 p-8 md:p-12 h-full flex flex-col justify-end">
           <div className="flex flex-col md:flex-row gap-8 items-end justify-between">
             <div className="flex items-end gap-6 w-full">
-              <div className="w-32 h-32 md:w-48 md:h-48 shrink-0 relative">
+              {/* Avatar */}
+              <div className="w-32 h-32 md:w-40 md:h-40 shrink-0 relative">
                 <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full" />
-                <img alt="Portrait" className="w-full h-full object-cover rounded-2xl border-2 border-primary/50 relative z-10" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?auto=format&fit=crop&q=80&w=600" />
-                <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-xl bg-surface-container-highest border border-white/10 flex flex-col items-center justify-center shadow-xl z-20">
-                  <span className="font-headline font-black text-2xl text-white leading-none">84</span>
-                  <span className="text-[8px] font-label text-primary uppercase font-bold tracking-widest">OVR</span>
+                <div className="w-full h-full rounded-2xl border-2 border-primary/50 relative z-10 bg-surface-container-highest flex items-center justify-center overflow-hidden">
+                  {profile.avatar_url ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="material-symbols-outlined text-6xl text-primary">person</span>
+                  )}
+                </div>
+                <div className="absolute -bottom-3 -right-3 px-3 py-1.5 rounded-xl bg-surface-container-highest border border-white/10 flex flex-col items-center justify-center shadow-xl z-20">
+                  <span className="text-[8px] font-label text-primary uppercase font-bold tracking-widest">Poste</span>
+                  <span className="font-headline font-black text-lg text-white leading-none">{profile.position || '?'}</span>
                 </div>
               </div>
-              
+
               <div className="flex-1 pb-2">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="px-3 py-1 bg-surface-container-highest border border-white/10 rounded text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400">22 ans</span>
-                  <span className="px-3 py-1 bg-primary/10 border border-primary/20 rounded text-[10px] font-headline font-bold uppercase tracking-widest text-primary">Buteur (BU)</span>
-                  <div className="flex gap-1 ml-2">
-                    <span className="material-symbols-outlined text-sm text-tertiary">star</span>
-                    <span className="material-symbols-outlined text-sm text-tertiary">star</span>
-                    <span className="material-symbols-outlined text-sm text-tertiary">star</span>
-                    <span className="material-symbols-outlined text-sm text-neutral-600">star</span>
-                    <span className="material-symbols-outlined text-sm text-neutral-600">star</span>
-                  </div>
+                <div className="flex items-center gap-3 mb-2 flex-wrap">
+                  {profile.height && (
+                    <span className="px-3 py-1 bg-surface-container-highest border border-white/10 rounded text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400">{profile.height} cm</span>
+                  )}
+                  {profile.weight && (
+                    <span className="px-3 py-1 bg-surface-container-highest border border-white/10 rounded text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400">{profile.weight} kg</span>
+                  )}
+                  {profile.strong_foot && (
+                    <span className="px-3 py-1 bg-tertiary/10 border border-tertiary/20 rounded text-[10px] font-headline font-bold uppercase tracking-widest text-tertiary">Pied {profile.strong_foot}</span>
+                  )}
                 </div>
-                <h1 className="text-5xl md:text-7xl font-headline font-black tracking-tighter uppercase leading-none mb-1 shadow-black drop-shadow-lg">
-                  Julian <br className="hidden md:block" />
-                  <span className="text-white italic">Velasquez</span>
+                <h1 className="text-4xl md:text-6xl font-headline font-black tracking-tighter uppercase leading-none mb-1">
+                  {profile.full_name || profile.username}
                 </h1>
-                <div className="flex items-center gap-2 mt-4">
-                  <span className="material-symbols-outlined text-neutral-500">location_on</span>
-                  <span className="text-sm font-label text-neutral-400">Buenos Aires, ARG</span>
-                </div>
+                <p className="text-primary font-headline font-bold text-sm uppercase tracking-widest mt-2">
+                  @{profile.username}
+                </p>
               </div>
-            </div>
-            
-            <div className="shrink-0 w-full md:w-auto flex flex-row md:flex-col gap-4">
-              <button className="flex-1 md:w-48 py-4 primary-gradient text-on-primary-container font-headline font-black uppercase tracking-widest rounded-xl hover:scale-105 active:scale-95 transition-all shadow-[0_0_20px_rgba(92,253,128,0.3)]">
-                Négocier
-              </button>
-              <button className="flex-1 md:w-48 py-4 bg-surface-container-high border border-white/10 text-white font-headline font-bold uppercase tracking-widest rounded-xl hover:bg-white/5 transition-all flex items-center justify-center gap-2">
-                <span className="material-symbols-outlined text-sm">bookmark_add</span> Pré-sélection
-              </button>
             </div>
           </div>
         </div>
       </motion.header>
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-12">
+        {/* INFO CARDS */}
         <motion.section variants={fadeUp} className="lg:col-span-8 space-y-6">
-          {/* Market Value */}
+          {/* Identité Virtual Pro */}
           <div className="bg-surface-container-low rounded-2xl p-6 border border-white/5">
             <h3 className="font-headline font-black text-xl uppercase tracking-tighter mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-tertiary">show_chart</span> Évolution de la Valeur Marchande
-            </h3>
-            <div className="h-64 relative flex items-end">
-              <div className="absolute inset-0 grid grid-cols-6 grid-rows-4 opacity-10">
-                {[...Array(24)].map((_, i) => (<div key={i} className="border-t border-l border-white" />))}
-              </div>
-              <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none" viewBox="0 0 100 100">
-                <defs>
-                  <linearGradient id="valueGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#5cfd80" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#5cfd80" stopOpacity="0" />
-                  </linearGradient>
-                </defs>
-                <path d="M0 80 Q 20 75, 40 60 T 70 40 T 100 20 L 100 100 L 0 100 Z" fill="url(#valueGradient)" />
-                <path d="M0 80 Q 20 75, 40 60 T 70 40 T 100 20" fill="none" stroke="#5cfd80" strokeWidth="2" />
-                <circle cx="100" cy="20" r="2.5" fill="#02c953" stroke="#fff" strokeWidth="1" className="animate-pulse" />
-              </svg>
-              <div className="absolute top-[10%] right-[2%] bg-surface-container-highest px-3 py-1.5 rounded border border-primary/20 shadow-lg">
-                <span className="block text-[8px] font-label text-neutral-400 uppercase tracking-widest mb-0.5">Valeur Actuelle</span>
-                <span className="font-headline font-black text-primary text-sm">€42,0M</span>
-              </div>
-              <div className="absolute bottom-[-1.5rem] w-full flex justify-between text-[10px] font-label text-neutral-500">
-                <span>2021</span><span>2022</span><span>2023</span><span>2024</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Key Metrics */}
-          <div className="bg-surface-container-low rounded-2xl p-6 border border-white/5">
-            <h3 className="font-headline font-black text-xl uppercase tracking-tighter mb-6 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary">analytics</span> Statistiques Clés
+              <span className="material-symbols-outlined text-primary">badge</span> Identité Virtual Pro
             </h3>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
               <div className="bg-surface-container-highest rounded-xl p-4">
-                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Buts (Saison)</span>
-                <span className="text-3xl font-headline font-black text-white">18</span>
-                <div className="w-full bg-surface-container-lowest h-1 mt-2 rounded-full overflow-hidden"><div className="bg-primary h-full w-[85%]" /></div>
+                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Position</span>
+                <span className="text-lg font-headline font-black text-white">{positionLabels[profile.position || ''] || profile.position || 'Non défini'}</span>
               </div>
               <div className="bg-surface-container-highest rounded-xl p-4">
-                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Passes D.</span>
-                <span className="text-3xl font-headline font-black text-white">07</span>
-                <div className="w-full bg-surface-container-lowest h-1 mt-2 rounded-full overflow-hidden"><div className="bg-primary h-full w-[60%]" /></div>
+                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Taille</span>
+                <span className="text-lg font-headline font-black text-white">{profile.height ? `${profile.height} cm` : '-'}</span>
               </div>
               <div className="bg-surface-container-highest rounded-xl p-4">
-                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Conv. Tirs</span>
-                <span className="text-3xl font-headline font-black text-tertiary">24%</span>
-                <div className="w-full bg-surface-container-lowest h-1 mt-2 rounded-full overflow-hidden"><div className="bg-tertiary h-full w-[70%]" /></div>
+                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Poids</span>
+                <span className="text-lg font-headline font-black text-white">{profile.weight ? `${profile.weight} kg` : '-'}</span>
               </div>
               <div className="bg-surface-container-highest rounded-xl p-4">
-                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Vit. Max</span>
-                <span className="text-3xl font-headline font-black text-white">34,2</span>
-                <span className="text-[10px] text-neutral-500 ml-1">km/h</span>
-                <div className="w-full bg-surface-container-lowest h-1 mt-2 rounded-full overflow-hidden"><div className="bg-primary h-full w-[92%]" /></div>
+                <span className="block text-[10px] uppercase font-label text-neutral-500 tracking-widest mb-1">Pied Fort</span>
+                <span className="text-lg font-headline font-black text-white">{profile.strong_foot || '-'}</span>
               </div>
             </div>
           </div>
+
+          {/* Bio */}
+          {profile.bio && (
+            <div className="bg-surface-container-low rounded-2xl p-6 border border-white/5">
+              <h3 className="font-headline font-black text-xl uppercase tracking-tighter mb-4 flex items-center gap-2">
+                <span className="material-symbols-outlined text-tertiary">description</span> Bio / Style de Jeu
+              </h3>
+              <p className="text-on-surface-variant font-body leading-relaxed">{profile.bio}</p>
+            </div>
+          )}
+
+          {/* Statut Club */}
+          <div className="bg-surface-container-low rounded-2xl p-6 border border-white/5">
+            <h3 className="font-headline font-black text-xl uppercase tracking-tighter mb-4 flex items-center gap-2">
+              <span className="material-symbols-outlined text-secondary">shield</span> Club Actuel
+            </h3>
+            {membership ? (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl flex items-center justify-center border border-white/10" style={{ backgroundColor: membership.teams.primary_color + '20' }}>
+                    <span className="material-symbols-outlined text-3xl" style={{ color: membership.teams.primary_color }}>shield</span>
+                  </div>
+                  <div>
+                    <p className="font-headline font-black text-xl uppercase">{membership.teams.name}</p>
+                    <p className="text-xs font-label text-neutral-500 uppercase tracking-widest">
+                      {membership.role === 'captain' ? '⭐ Capitaine' : 'Joueur'} {membership.jersey_number ? `• N°${membership.jersey_number}` : ''}
+                    </p>
+                  </div>
+                </div>
+                <button onClick={() => router.push('/my-club')} className="px-4 py-2 bg-surface-container-highest border border-white/10 rounded-xl text-xs font-headline font-bold uppercase tracking-widest hover:bg-white/5 transition-colors">
+                  Voir le Club
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-14 h-14 rounded-xl bg-surface-container-highest flex items-center justify-center border border-white/10">
+                    <span className="material-symbols-outlined text-3xl text-neutral-500">work_history</span>
+                  </div>
+                  <div>
+                    <p className="font-headline font-bold text-lg text-neutral-400">Agent Libre</p>
+                    <p className="text-xs font-label text-neutral-600">Aucun club pour le moment</p>
+                  </div>
+                </div>
+                <button onClick={() => router.push('/mercato')} className="px-4 py-2 primary-gradient rounded-xl text-xs font-headline font-black uppercase tracking-widest text-background hover:scale-105 transition-transform">
+                  Aller au Mercato
+                </button>
+              </div>
+            )}
+          </div>
         </motion.section>
 
-        {/* Career Journey */}
-        <motion.section variants={fadeUp} className="lg:col-span-4 bg-surface-container-low rounded-2xl p-6 border border-white/5">
-          <h3 className="font-headline font-black text-xl uppercase tracking-tighter mb-8 flex items-center gap-2">
-            <span className="material-symbols-outlined text-neutral-400">route</span> Parcours
-          </h3>
-          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-primary before:via-white/10 before:to-transparent">
-            
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group is-active">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-low bg-primary text-on-primary-container shrink-0 md:order-1 shadow-[0_0_15px_rgba(92,253,128,0.4)] relative z-10">
-                <span className="material-symbols-outlined text-[16px]">sports_soccer</span>
+        {/* SIDEBAR */}
+        <motion.section variants={fadeUp} className="lg:col-span-4 space-y-6">
+          <div className="bg-surface-container-low rounded-2xl p-6 border border-white/5">
+            <h3 className="font-headline font-black text-lg uppercase tracking-tighter mb-6 flex items-center gap-2">
+              <span className="material-symbols-outlined text-primary">info</span> Infos Compte
+            </h3>
+            <div className="space-y-4">
+              <div className="bg-surface-container-highest/50 rounded-xl p-4">
+                <span className="block text-[10px] uppercase font-label font-bold text-neutral-500 tracking-widest mb-1">Rôle</span>
+                <span className="text-lg font-headline font-black text-white capitalize">{profile.role}</span>
               </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] bg-surface-container-highest p-4 rounded-xl border border-primary/30">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-headline font-bold text-sm text-white">Real Madrid</span>
-                  <span className="text-[10px] font-label text-primary font-bold">2024 - Présent</span>
-                </div>
-                <span className="text-xs font-label text-on-surface-variant">42 Matchs • 26 Buts</span>
+              <div className="bg-surface-container-highest/50 rounded-xl p-4">
+                <span className="block text-[10px] uppercase font-label font-bold text-neutral-500 tracking-widest mb-1">Membre depuis</span>
+                <span className="text-sm font-headline font-bold text-white">
+                  {new Date(profile.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </span>
               </div>
-            </div>
-
-            <div className="relative flex items-center justify-between md:justify-normal md:even:flex-row-reverse group">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-low bg-surface-container-highest shrink-0 md:order-1 relative z-10">
-                <span className="w-2 h-2 rounded-full bg-neutral-500" />
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl hover:bg-surface-container-highest transition-colors">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-headline font-bold text-sm text-neutral-300">FC Porto</span>
-                  <span className="text-[10px] font-label text-neutral-500">2021 - 2024</span>
-                </div>
-                <span className="text-xs font-label text-neutral-500">88 Matchs • 45 Buts</span>
-              </div>
-            </div>
-
-            <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-              <div className="flex items-center justify-center w-10 h-10 rounded-full border-4 border-surface-container-low bg-surface-container-highest shrink-0 md:order-1 relative z-10">
-                <span className="w-2 h-2 rounded-full bg-neutral-600" />
-              </div>
-              <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-4 rounded-xl hover:bg-surface-container-highest transition-colors opacity-70">
-                <div className="flex items-center justify-between mb-1">
-                  <span className="font-headline font-bold text-sm text-neutral-400">Boca Juniors (Centre)</span>
-                  <span className="text-[10px] font-label text-neutral-600">2016 - 2021</span>
-                </div>
-                <span className="text-xs font-label text-neutral-600">Formation Jeunes</span>
+              <div className="bg-surface-container-highest/50 rounded-xl p-4">
+                <span className="block text-[10px] uppercase font-label font-bold text-neutral-500 tracking-widest mb-1">Onboarding</span>
+                <span className={`text-sm font-headline font-bold ${profile.onboarding_completed ? 'text-primary' : 'text-error'}`}>
+                  {profile.onboarding_completed ? '✓ Complété' : '✗ Incomplet'}
+                </span>
               </div>
             </div>
           </div>

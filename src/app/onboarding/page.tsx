@@ -27,7 +27,7 @@ export default function OnboardingPage() {
     // Si pas connecté, rediriger d'abord vers le login
     if (!isLoading && !user) router.push('/login');
     // Si déjà onboarding completed, rediriger vers l'accueil
-    if (!isLoading && profile?.onboarding_completed) router.push('/');
+    if (!isLoading && profile?.onboarding_completed) router.push('/dashboard');
   }, [user, profile, isLoading, router]);
 
   if (isLoading || !user) return <PageSkeleton />;
@@ -58,7 +58,7 @@ export default function OnboardingPage() {
 
       await refreshProfile();
       toast.success('Profil Virtual Pro créé avec succès !');
-      router.push('/');
+      router.push('/dashboard');
     } catch (err: unknown) {
       const e = err as Error;
       toast.error(e.message || 'Une erreur est survenue lors de la création de votre profil.');

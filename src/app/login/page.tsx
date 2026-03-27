@@ -22,7 +22,7 @@ export default function LoginPage() {
       toast.error(error);
     } else {
       toast.success('Connexion réussie !');
-      router.push('/');
+      router.push('/dashboard');
     }
     setLoading(false);
   };
@@ -106,7 +106,7 @@ export default function LoginPage() {
         </form>
 
         <p className="text-center text-[10px] text-neutral-600 mt-8 uppercase tracking-widest font-label">
-          Kinetic Arena &bull; Saison 2024-25
+          Kinetic Arena &bull; Saison 2025-26
         </p>
       </motion.div>
     </div>

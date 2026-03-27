@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { useAuth } from '@/context/AuthContext';
-import { useRef } from 'react';
+import { useRef, useEffect, useState } from 'react';
+import { supabase } from '@/lib/supabase/client';
 
 const fadeUp = {
   hidden: { opacity: 0, y: 50 },
@@ -21,7 +22,16 @@ const staggerContainer = {
 export default function LandingPage() {
   const { user } = useAuth();
   const heroRef = useRef(null);
+  const [stats, setStats] = useState({ clubs: 0, joueurs: 0 });
   
+  useEffect(() => {
+    (async () => {
+      const { count: teamCount } = await supabase.from('teams').select('*', { count: 'exact', head: true });
+      const { count: playerCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true });
+      setStats({ clubs: teamCount || 0, joueurs: playerCount || 0 });
+    })();
+  }, []);
+
   const { scrollYProgress } = useScroll({
     target: heroRef,
     offset: ["start start", "end start"]
@@ -129,11 +139,11 @@ export default function LandingPage() {
       <section className="relative z-20 -mt-10 border-y border-white/5 bg-surface-container/50 backdrop-blur-xl py-8">
         <div className="max-w-7xl mx-auto px-4 grid grid-cols-2 md:grid-cols-4 gap-8 divide-x divide-white/5">
           <div className="text-center">
-            <div className="text-4xl font-headline font-black text-white mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">12</div>
+            <div className="text-4xl font-headline font-black text-white mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{stats.clubs}</div>
             <div className="text-[10px] font-headline font-bold uppercase tracking-widest text-primary">Clubs Pro</div>
           </div>
           <div className="text-center">
-            <div className="text-4xl font-headline font-black text-white mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">250+</div>
+            <div className="text-4xl font-headline font-black text-white mb-1 drop-shadow-[0_0_15px_rgba(255,255,255,0.2)]">{stats.joueurs}</div>
             <div className="text-[10px] font-headline font-bold uppercase tracking-widest text-primary">Joueurs Inscrits</div>
           </div>
           <div className="text-center">

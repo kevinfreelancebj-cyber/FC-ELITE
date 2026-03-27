@@ -1,11 +1,12 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 
 export default function SideNavBar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { profile, signOut } = useAuth();
 
   const links = [
@@ -70,17 +71,13 @@ export default function SideNavBar() {
       </nav>
 
       <div className="px-4 mt-auto space-y-4">
-        <button className="w-full py-4 kinetic-gradient text-neutral-950 font-headline font-extrabold uppercase tracking-tighter rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2">
-          <span className="material-symbols-outlined">sports_soccer</span>
-          JOUR DE MATCH
-        </button>
+        <Link href="/fixtures" className="w-full py-4 kinetic-gradient text-neutral-950 font-headline font-extrabold uppercase tracking-tighter rounded-xl shadow-lg shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-transform flex items-center justify-center gap-2">
+          <span className="material-symbols-outlined">sports_score</span>
+          CALENDRIER
+        </Link>
         <div className="pt-6 border-t border-outline-variant/10">
-          <Link href="#" className="flex items-center gap-3 px-4 py-3 text-neutral-500 hover:text-emerald-400 hover:bg-neutral-800 transition-all rounded-lg">
-            <span className="material-symbols-outlined text-sm">help</span>
-            <span className="font-headline font-semibold uppercase tracking-widest text-[10px]">Aide</span>
-          </Link>
           <button
-            onClick={() => signOut()}
+            onClick={async () => { await signOut(); router.push('/'); }}
             className="w-full flex items-center gap-3 px-4 py-3 text-error hover:bg-error/10 hover:text-error transition-all rounded-lg"
           >
             <span className="material-symbols-outlined text-sm">logout</span>

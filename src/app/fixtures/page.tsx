@@ -105,14 +105,71 @@ export default function FixturesPage() {
 
       if (error) throw error;
 
-      toast.success('Résultat du match déclaré avec succès !');
+      // UPDATE STANDINGS for both teams
+      await updateStandings(submittingMatch, homeScore, awayScore);
+
+      toast.success('Résultat du match déclaré et classement mis à jour !');
       setSubmittingMatch(null);
-      fetchData(); // Refresh UI
+      fetchData();
     } catch (err: unknown) {
       toast.error((err as Error).message || 'Erreur lors de la déclaration.');
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const updateStandings = async (match: MatchWithTeams, hScore: number, aScore: number) => {
+    // Determine results
+    const homeWin = hScore > aScore;
+    const draw = hScore === aScore;
+
+    // Get season_id from match
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { data: matchFull } = await (supabase.from('matches') as any).select('season_id').eq('id', match.id).single();
+    if (!matchFull) return;
+    const seasonId = matchFull.season_id;
+
+    // Helper to update one team
+    const updateTeam = async (teamId: string, isHome: boolean) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: standing } = await (supabase.from('standings') as any)
+        .select('*')
+        .eq('season_id', seasonId)
+        .eq('team_id', teamId)
+        .single();
+      if (!standing) return;
+
+      const gf = isHome ? hScore : aScore;
+      const ga = isHome ? aScore : hScore;
+      const won = (isHome && homeWin) || (!isHome && !homeWin && !draw);
+      const drew = draw;
+
+      const newPlayed = (standing.played || 0) + 1;
+      const newWins = (standing.wins || 0) + (won ? 1 : 0);
+      const newDraws = (standing.draws || 0) + (drew ? 1 : 0);
+      const newLosses = (standing.losses || 0) + (!won && !drew ? 1 : 0);
+      const newGF = (standing.goals_for || 0) + gf;
+      const newGA = (standing.goals_against || 0) + ga;
+      const newForm = [...(standing.form || []), won ? 'V' : drew ? 'N' : 'D'].slice(-5);
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase.from('standings') as any)
+        .update({
+          played: newPlayed,
+          wins: newWins,
+          draws: newDraws,
+          losses: newLosses,
+          goals_for: newGF,
+          goals_against: newGA,
+          goal_difference: newGF - newGA,
+          points: newWins * 3 + newDraws,
+          form: newForm,
+        })
+        .eq('id', standing.id);
+    };
+
+    await updateTeam(match.home_team_id, true);
+    await updateTeam(match.away_team_id, false);
   };
 
   const openSubmitModal = (match: MatchWithTeams) => {
@@ -138,7 +195,7 @@ export default function FixturesPage() {
       {/* HEADER */}
       <motion.header variants={fadeUp} className="mb-10 flex flex-col md:flex-row md:items-end justify-between gap-6">
         <div>
-          <span className="text-secondary font-label font-semibold uppercase tracking-[0.2em] text-[10px] mb-2 block animate-pulse">Saison 2024-25</span>
+          <span className="text-secondary font-label font-semibold uppercase tracking-[0.2em] text-[10px] mb-2 block animate-pulse">Saison 2025-26</span>
           <h1 className="text-5xl md:text-6xl font-headline font-black tracking-tighter mb-2">Centre de <span className="text-white italic">Matchs.</span></h1>
           <p className="text-on-surface-variant max-w-lg">Suivez les résultats officiels et, en tant que capitaine, déclarez les scores de vos rencontres.</p>
         </div>

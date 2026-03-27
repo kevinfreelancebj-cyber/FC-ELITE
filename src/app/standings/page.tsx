@@ -24,15 +24,6 @@ export default function LeagueStandings() {
 
       if (data && data.length > 0) {
         setStandings(data as unknown as StandingWithTeam[]);
-      } else {
-        // Fallback demo data
-        setStandings([
-          { rank: 1, teams: { name: 'FC ELITE', short_name: 'FCE' } as Team, played: 12, wins: 10, draws: 2, losses: 0, goals_for: 28, goals_against: 5, goal_difference: 23, points: 32, form: ['V', 'V', 'N', 'V', 'V'] } as unknown as StandingWithTeam,
-          { rank: 2, teams: { name: 'RED WOLVES', short_name: 'RDW' } as Team, played: 12, wins: 9, draws: 1, losses: 2, goals_for: 22, goals_against: 9, goal_difference: 13, points: 28, form: ['V', 'D', 'V', 'V', 'N'] } as unknown as StandingWithTeam,
-          { rank: 3, teams: { name: 'NEON KINGS', short_name: 'NEO' } as Team, played: 12, wins: 8, draws: 2, losses: 2, goals_for: 19, goals_against: 11, goal_difference: 8, points: 26, form: ['N', 'V', 'V', 'D', 'V'] } as unknown as StandingWithTeam,
-          { rank: 4, teams: { name: 'STEEL CITY', short_name: 'STC' } as Team, played: 12, wins: 6, draws: 4, losses: 2, goals_for: 15, goals_against: 10, goal_difference: 5, points: 22, form: ['N', 'N', 'V', 'V', 'D'] } as unknown as StandingWithTeam,
-          { rank: 5, teams: { name: 'AZURE DRAGONS', short_name: 'AZD' } as Team, played: 12, wins: 5, draws: 3, losses: 4, goals_for: 14, goals_against: 15, goal_difference: -1, points: 18, form: ['D', 'V', 'N', 'D', 'V'] } as unknown as StandingWithTeam,
-        ]);
       }
       setLoading(false);
     }

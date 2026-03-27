@@ -51,7 +51,7 @@ export default function SignupPage() {
           <h1 className="text-4xl font-headline font-black tracking-tighter uppercase">
             Rejoindre <span className="text-primary italic">l&apos;Élite</span>
           </h1>
-          <p className="text-on-surface-variant text-sm mt-2">Créez votre profil de manager</p>
+          <p className="text-on-surface-variant text-sm mt-2">Créez votre profil de joueur</p>
         </div>
 
         <form onSubmit={handleSubmit} className="bg-surface-container-low border border-white/5 rounded-2xl p-8 space-y-5 shadow-2xl">
@@ -138,7 +138,7 @@ export default function SignupPage() {
         </form>
 
         <p className="text-center text-[10px] text-neutral-600 mt-8 uppercase tracking-widest font-label">
-          Kinetic Arena &bull; Saison 2024-25
+          Kinetic Arena &bull; Saison 2025-26
         </p>
       </motion.div>
     </div>

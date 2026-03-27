@@ -7,7 +7,7 @@ import { supabase } from '@/lib/supabase/client';
 import { useAuth } from '@/context/AuthContext';
 import { PageSkeleton } from '@/components/ui/LoadingSkeleton';
 import EmptyState from '@/components/ui/EmptyState';
-import type { Team, Profile } from '@/lib/supabase/types';
+import type { Team } from '@/lib/supabase/types';
 
 const fadeUp = { hidden: { opacity: 0, y: 20 }, show: { opacity: 1, y: 0, transition: { duration: 0.5 } } };
 
@@ -147,7 +147,7 @@ export default function MyClubPage() {
             <button className="px-4 py-3 bg-surface-container-high hover:bg-white/5 border border-white/10 rounded-xl text-xs font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">settings</span> Paramètres
             </button>
-            <button className="px-4 py-3 primary-gradient text-background rounded-xl text-xs font-headline font-black uppercase tracking-widest transition-transform hover:scale-105 shadow-[0_0_20px_rgba(92,253,128,0.3)] flex items-center gap-2">
+            <button onClick={() => router.push('/mercato')} className="px-4 py-3 primary-gradient text-background rounded-xl text-xs font-headline font-black uppercase tracking-widest transition-transform hover:scale-105 shadow-[0_0_20px_rgba(92,253,128,0.3)] flex items-center gap-2">
               <span className="material-symbols-outlined text-sm">add</span> Recruter
             </button>
           </div>
