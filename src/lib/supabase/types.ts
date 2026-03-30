@@ -128,6 +128,17 @@ export interface MatchEvent {
   created_at: string;
 }
 
+export interface MatchPerformance {
+  id: string;
+  match_id: string;
+  profile_id: string; // Refers to the real user
+  team_id: string;
+  goals: number;
+  assists: number;
+  is_mvp: boolean;
+  created_at: string;
+}
+
 export interface Player {
   id: string;
   name: string;
@@ -285,6 +296,7 @@ export interface Database {
       standings: { Row: Standing };
       matches: { Row: Match };
       match_events: { Row: MatchEvent };
+      match_performances: { Row: MatchPerformance };
       players: { Row: Player };
       player_stats: { Row: PlayerStats };
       career_entries: { Row: CareerEntry };

@@ -40,6 +40,12 @@ export default function FixturesPage() {
   const [awayScore, setAwayScore] = useState<number>(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Match Stats Logic
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [roster, setRoster] = useState<any[]>([]);
+  const [playerStats, setPlayerStats] = useState<Record<string, { goals: number, assists: number }>>({});
+  const [mvpId, setMvpId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchData();
   // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -108,6 +114,25 @@ export default function FixturesPage() {
       // UPDATE STANDINGS for both teams
       await updateStandings(submittingMatch, homeScore, awayScore);
 
+      // INSERT MATCH PERFORMANCES
+      const performances = roster.map(player => {
+        const stats = playerStats[player.profile_id] || { goals: 0, assists: 0 };
+        return {
+          match_id: submittingMatch.id,
+          profile_id: player.profile_id,
+          team_id: myTeamId,
+          goals: stats.goals,
+          assists: stats.assists,
+          is_mvp: mvpId === player.profile_id
+        };
+      });
+
+      if (performances.length > 0) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const { error: perfError } = await (supabase.from('match_performances') as any).insert(performances);
+        if (perfError) console.error('Match perf error', perfError);
+      }
+
       toast.success('Résultat du match déclaré et classement mis à jour !');
       setSubmittingMatch(null);
       fetchData();
@@ -172,10 +197,27 @@ export default function FixturesPage() {
     await updateTeam(match.away_team_id, false);
   };
 
-  const openSubmitModal = (match: MatchWithTeams) => {
+  const openSubmitModal = async (match: MatchWithTeams) => {
     setSubmittingMatch(match);
     setHomeScore(0);
     setAwayScore(0);
+    
+    // Fetch my team roster
+    if (myTeamId) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: teamMembers } = await (supabase.from('team_members') as any)
+        .select('profile_id, profiles(username)')
+        .eq('team_id', myTeamId)
+        .eq('is_active', true);
+      
+      if (teamMembers) {
+        setRoster(teamMembers);
+        const initStats: Record<string, {goals: number, assists: number}> = {};
+        teamMembers.forEach((m: any) => { initStats[m.profile_id] = {goals: 0, assists: 0} });
+        setPlayerStats(initStats);
+      }
+    }
+    setMvpId(null);
   };
 
   if (loading) return <PageSkeleton />;
@@ -338,6 +380,48 @@ export default function FixturesPage() {
                       />
                     </div>
                   </div>
+
+                  {/* MATCH EVENTS ( MVP, Buteur, Passeur ) */}
+                  {roster.length > 0 && (
+                    <div className="mb-8 p-4 bg-surface-container/50 border border-white/10 rounded-xl">
+                      <h3 className="font-headline font-bold text-sm uppercase tracking-widest text-primary mb-4 flex items-center gap-2">
+                        <span className="material-symbols-outlined text-sm">bar_chart</span> Stats de votre équipe
+                      </h3>
+                      
+                      <div className="space-y-4 max-h-[250px] overflow-y-auto pr-2">
+                        {roster.map(player => (
+                          <div key={player.profile_id} className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-surface-container-highest/50 rounded-lg border border-white/5">
+                            <span className="font-headline font-bold text-sm">{player.profiles.username}</span>
+                            
+                            <div className="flex flex-wrap items-center gap-4">
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase text-neutral-500 font-label tracking-widest">Buts</span>
+                                <input type="number" min="0" max="20"
+                                  value={playerStats[player.profile_id]?.goals || 0}
+                                  onChange={e => setPlayerStats(prev => ({...prev, [player.profile_id]: {...prev[player.profile_id], goals: parseInt(e.target.value)||0}}))}
+                                  className="w-12 h-8 bg-black/50 border border-white/10 rounded-md text-center text-sm focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <span className="text-[10px] uppercase text-neutral-500 font-label tracking-widest">Passes</span>
+                                <input type="number" min="0" max="20"
+                                  value={playerStats[player.profile_id]?.assists || 0}
+                                  onChange={e => setPlayerStats(prev => ({...prev, [player.profile_id]: {...prev[player.profile_id], assists: parseInt(e.target.value)||0}}))}
+                                  className="w-12 h-8 bg-black/50 border border-white/10 rounded-md text-center text-sm focus:border-primary focus:outline-none"
+                                />
+                              </div>
+                              <label className="flex items-center gap-2 cursor-pointer">
+                                <input type="radio" name="mvp" value={player.profile_id} checked={mvpId === player.profile_id} onChange={() => setMvpId(player.profile_id)} className="hidden"/>
+                                <span className={`w-8 h-8 rounded-full flex items-center justify-center border transition-colors ${mvpId === player.profile_id ? 'bg-primary text-black border-primary' : 'bg-transparent text-neutral-500 border-white/10 hover:border-primary/50'}`}>
+                                  <span className="material-symbols-outlined text-sm">star</span>
+                                </span>
+                              </label>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   {/* VPG Screenshot Proof (Mock) */}
                   <div className="mb-8 p-4 border-2 border-dashed border-white/10 rounded-xl text-center hover:bg-white/5 transition-colors cursor-pointer group">

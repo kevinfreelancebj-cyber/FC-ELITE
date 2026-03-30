@@ -31,6 +31,12 @@ export default function AdminDashboard() {
   // Calendar generation state
   const [generating, setGenerating] = useState(false);
 
+  // Teams Management state
+  const [isAddingTeam, setIsAddingTeam] = useState(false);
+  const [newTeamName, setNewTeamName] = useState('');
+  const [newTeamShort, setNewTeamShort] = useState('');
+  const [newTeamColor, setNewTeamColor] = useState('#10B981');
+
   useEffect(() => {
     if (!isLoading && !user) { router.push('/login'); return; }
     if (!isLoading && profile && profile.role !== 'admin') {
@@ -88,6 +94,33 @@ export default function AdminDashboard() {
       .eq('id', memberId);
     if (error) { toast.error('Erreur : ' + error.message); return; }
     toast.success(`${profileUsername} n&apos;est plus Capitaine.`);
+    fetchData();
+  };
+
+  // TEAM MANAGEMENT
+  const handleCreateTeam = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newTeamName || !newTeamShort) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('teams') as any).insert({
+      name: newTeamName,
+      short_name: newTeamShort.substring(0, 4).toUpperCase(),
+      primary_color: newTeamColor,
+      budget: 50000000,
+      wage_cap: 1000000,
+    });
+    if (error) { toast.error(error.message); return; }
+    toast.success('Équipe créée avec succès !');
+    setNewTeamName(''); setNewTeamShort(''); setIsAddingTeam(false);
+    fetchData();
+  };
+
+  const handleDeleteTeam = async (id: string, name: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir supprimer définitivement l'équipe ${name} ? Toutes les données associées (matchs, membres) pourraient être affectées.`)) return;
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const { error } = await (supabase.from('teams') as any).delete().eq('id', id);
+    if (error) { toast.error(error.message); return; }
+    toast.success(`L'équipe ${name} a été supprimée.`);
     fetchData();
   };
 
@@ -280,17 +313,49 @@ export default function AdminDashboard() {
           </div>
 
           {/* Teams list */}
-          <h3 className="font-headline font-bold text-sm uppercase tracking-widest text-neutral-400 mb-4">Équipes enregistrées</h3>
-          <div className="space-y-2">
-            {teams.map(team => (
-              <div key={team.id} className="flex items-center gap-3 p-3 rounded-xl bg-surface-container-highest/30 border border-white/5">
-                <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10" style={{ backgroundColor: team.primary_color + '20' }}>
-                  <span className="material-symbols-outlined text-sm" style={{ color: team.primary_color }}>shield</span>
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-headline font-bold text-sm uppercase tracking-widest text-neutral-400">Équipes enregistrées</h3>
+            <button onClick={() => setIsAddingTeam(!isAddingTeam)} className="px-3 py-1.5 bg-white/5 hover:bg-white/10 text-white rounded-lg text-[10px] font-headline font-bold uppercase tracking-widest transition-colors flex items-center gap-2">
+              <span className="material-symbols-outlined text-sm">{isAddingTeam ? 'close' : 'add'}</span>
+              Nouvelle
+            </button>
+          </div>
+
+          {isAddingTeam && (
+            <form onSubmit={handleCreateTeam} className="mb-6 p-4 rounded-xl bg-surface-container-highest/50 border border-white/10 space-y-4">
+              <div>
+                <label className="block text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400 mb-1">Nom Complet</label>
+                <input type="text" value={newTeamName} onChange={e => setNewTeamName(e.target.value)} required className="w-full bg-surface-container/50 border border-white/10 rounded-lg px-3 py-2 text-sm font-headline focus:outline-none focus:border-primary" placeholder="Ex: Paris FC Esports"/>
+              </div>
+              <div className="flex gap-4">
+                <div className="flex-1">
+                  <label className="block text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400 mb-1">Trigramme</label>
+                  <input type="text" value={newTeamShort} onChange={e => setNewTeamShort(e.target.value)} maxLength={4} required className="w-full bg-surface-container/50 border border-white/10 rounded-lg px-3 py-2 text-sm font-headline uppercase focus:outline-none focus:border-primary" placeholder="PFC"/>
                 </div>
                 <div>
-                  <span className="font-headline font-bold text-sm">{team.name}</span>
-                  <span className="text-[10px] text-neutral-500 ml-2">{team.short_name}</span>
+                  <label className="block text-[10px] font-headline font-bold uppercase tracking-widest text-neutral-400 mb-1">Couleur</label>
+                  <input type="color" value={newTeamColor} onChange={e => setNewTeamColor(e.target.value)} className="w-12 h-9 bg-surface-container/50 border border-white/10 rounded-lg cursor-pointer"/>
                 </div>
+              </div>
+              <button type="submit" className="w-full py-2 bg-primary text-black font-headline font-bold text-xs uppercase tracking-widest rounded-lg hover:bg-primary/90 transition-colors">Créer l&apos;équipe</button>
+            </form>
+          )}
+
+          <div className="space-y-2">
+            {teams.map(team => (
+              <div key={team.id} className="flex items-center justify-between p-3 rounded-xl bg-surface-container-highest/30 border border-white/5 hover:border-white/10 transition-colors group">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg flex items-center justify-center border border-white/10" style={{ backgroundColor: team.primary_color + '20' }}>
+                    <span className="material-symbols-outlined text-sm" style={{ color: team.primary_color }}>shield</span>
+                  </div>
+                  <div>
+                    <span className="font-headline font-bold text-sm block">{team.name}</span>
+                    <span className="text-[10px] text-neutral-500">{team.short_name}</span>
+                  </div>
+                </div>
+                <button onClick={() => handleDeleteTeam(team.id, team.name)} className="opacity-0 group-hover:opacity-100 p-2 text-error hover:bg-error/10 hover:border-error/20 border border-transparent rounded-lg transition-all rounded-lg">
+                  <span className="material-symbols-outlined text-sm flex items-center justify-center">delete</span>
+                </button>
               </div>
             ))}
           </div>
